@@ -10,7 +10,7 @@ def createParser():
 
 def group_search():
   group_num = input("Введите номер группы: ")
-  res = requests.get("https://ruz.spbstu.ru/search/groups?q="+group_num)
+  res = requests.get(f"https://ruz.spbstu.ru/search/groups?q={group_num}")
 
   soup = BeautifulSoup(res.text, 'html.parser')
   divs = soup.find_all('a', class_='groups-list__link')
@@ -22,50 +22,65 @@ def group_search():
   
   num = int(input("Выберите номер группы: "))
 
-  res = requests.get("https://ruz.spbstu.ru" + divs[num - 1].get("href"))
+  res = requests.get(f"https://ruz.spbstu.ru{divs[num - 1].get("href")}")
   parse(res.text)
 
 
 def parse(html):
   soup = BeautifulSoup(html, 'html.parser')
 
-  lesson_teacher = soup.find_all('li', class_='breadcrumb-item')
   dates = soup.find_all('div', class_='schedule__date')
-  lesson_names = soup.find_all('div', class_='lesson__subject')
-  lesson_types = soup.find_all('div', class_='lesson__type')
-  lesson_groups = soup.find_all('div', class_='lesson-groups__list')
-  lesson_places = soup.find_all('a', class_='lesson__link', href=True) 
-   
-  for i in range(len(dates)):
-    print(dates[i].text)
-    print(lesson_names[i].text)
-    print(lesson_types[i].text)
-    string = lesson_groups[i].text
-    splitted_string = [string[i:i+13] for i in range(8, len(string), 13)]
+  lessons = soup.find_all('li', class_='lesson')
+  num_day = 0
+  count = 0
+  for i in lessons:
+    if count == 0:
+      print(f"\033[0;31m{dates[num_day].text}\033[0m")
+      num_day += 1
+
+    count += 1
+    lesson_name = i.find('div', class_='lesson__subject')
+    print(f"{lesson_name.text}")
+
+    lesson_type = i.find('div', class_='lesson__type')
+    print(lesson_type.text)
+
+    lesson_groups = i.find('div', class_='lesson-groups__list')
+    splitted_string = [lesson_groups.text[i:i+13] for i in range(8, len(lesson_groups.text), 13)]
     result = ' '.join(splitted_string)
     print(result)
-    print(lesson_teacher[1].text)
-    last_lesson_place = lesson_places[-1].text
-    print(last_lesson_place)
 
-    print('')
+    lesson_link = i.find('div', class_='lesson__teachers')
+    if lesson_link:
+      span_elements = lesson_link.find_all('span')
+      print(span_elements[-1].text)
+
+    lesson_places = i.find('div', class_='lesson__places')
+    print(lesson_places.text)
+
+    if count == len(i.parent):
+      count = 0
+      print(" ")
+
+    print(" ")
+
   
   choice = int(input("Действие: 0 – предыдущая неделя, 1 – следующая неделя: "))
   if choice == 1:
     link = soup.find_all('a', class_='switcher__link')
     last_element = link[-1]
-    res = requests.get("https://ruz.spbstu.ru" + last_element.get("href"))
+    res = requests.get(f"https://ruz.spbstu.ru{last_element.get("href")}")
     parse(res.text)
   elif choice == 0:
     link = soup.find_all('a', class_='switcher__link')
     last_element = link[0]
-    res = requests.get("https://ruz.spbstu.ru" + last_element.get("href"))
+    res = requests.get(f"https://ruz.spbstu.ru{last_element.get("href")}")
     parse(res.text)
 
 
 def teacher_search():
   teacher_name = input("Введите ФИО преподавателя: ")
-  res = requests.get("https://ruz.spbstu.ru/search/teacher?q="+teacher_name);
+  res = requests.get(f"https://ruz.spbstu.ru/search/teacher?q={teacher_name}");
   
   soup = BeautifulSoup(res.text, 'html.parser')
   divs = soup.find_all('a', class_='search-result__link')
@@ -77,7 +92,8 @@ def teacher_search():
 
   num = int(input("Выберите номер преподавателя: "))
 
-  res = requests.get("https://ruz.spbstu.ru" + divs[num - 1].get("href"))
+  res = requests.get(f"https://ruz.spbstu.ru{divs[num - 1].get("href")}")
+  parse(res.text)
 
 
 if __name__ == '__main__':
