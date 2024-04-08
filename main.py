@@ -61,22 +61,17 @@ def parse(html):
     if count == len(i.parent):
       count = 0
       print(" ")
-
     print(" ")
 
   
-  choice = int(input("Действие: 0 – предыдущая неделя, 1 – следующая неделя: "))
-  if choice == 1:
-    link = soup.find_all('a', class_='switcher__link')
-    last_element = link[-1]
-    res = requests.get(f"https://ruz.spbstu.ru{last_element.get("href")}")
-    parse(res.text)
-  elif choice == 0:
-    link = soup.find_all('a', class_='switcher__link')
-    last_element = link[0]
-    res = requests.get(f"https://ruz.spbstu.ru{last_element.get("href")}")
-    parse(res.text)
-
+  choice = int(input("Действие: 0 – предыдущая неделя, 1 – следующая неделя"))
+  link = soup.find_all('a', class_='switcher__link')
+  index = ""
+  if choice == 1: index = link[-1]
+  elif choice == 0: index = link[0]
+  res = requests.get(f"https://ruz.spbstu.ru{index.get("href")}")
+  parse(res.text)
+  
 
 def teacher_search():
   teacher_name = input("Введите ФИО преподавателя: ")
